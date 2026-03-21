@@ -5,12 +5,14 @@ const COLORS = ['red', 'blue', 'green', 'yellow', 'purple', 'pink'];
 const GRID_SIZE = 6;
 const MATCH_SIZE = 3;
 const ANIMATION_DELAY = 150;
+const INITIAL_MOVES = 25; // Movimentos iniciais agradáveis
 
 class Match3Game {
     constructor() {
         this.grid = [];
         this.score = 0;
         this.moves = 0;
+        this.movesRemaining = INITIAL_MOVES;
         this.history = [];
         this.selectedTile = null;
         this.isAnimating = false;
@@ -25,6 +27,7 @@ class Match3Game {
         this.grid = this.generateGrid();
         this.score = 0;
         this.moves = 0;
+        this.movesRemaining = INITIAL_MOVES;
         this.history = [];
         this.selectedTile = null;
         this.isAnimating = false;
@@ -119,6 +122,7 @@ class Match3Game {
         this.grid[row2][col2] = temp;
 
         this.moves++;
+        this.movesRemaining--;
 
         // Check for matches
         this.isAnimating = true;
@@ -132,6 +136,7 @@ class Match3Game {
                 this.grid[row1][col1] = this.grid[row2][col2];
                 this.grid[row2][col2] = temp;
                 this.moves--;
+                this.movesRemaining++;
                 this.history.pop();
                 this.isAnimating = false;
                 this.render();
@@ -144,6 +149,7 @@ class Match3Game {
             grid: JSON.parse(JSON.stringify(this.grid)),
             score: this.score,
             moves: this.moves,
+            movesRemaining: this.movesRemaining,
         });
     }
 
@@ -153,6 +159,7 @@ class Match3Game {
         const previousState = this.history.pop();
         if (previousState) {
             this.grid = JSON.parse(JSON.stringify(previousState.grid));
+            this.movesRemaining = previousState.movesRemaining;
             this.score = previousState.score;
             this.moves = previousState.moves;
             this.render();
@@ -270,6 +277,13 @@ class Match3Game {
     }
 
     checkGameOver() {
+        // Check if movesRemaining is 0
+        if (this.movesRemaining <= 0) {
+            this.gameOver = true;
+            this.showGameOver();
+            return;
+        }
+
         // Check if any valid moves exist
         for (let i = 0; i < GRID_SIZE; i++) {
             for (let j = 0; j < GRID_SIZE; j++) {
@@ -370,7 +384,7 @@ class Match3Game {
         const movesDisplay = document.getElementById('movesDisplay');
 
         if (scoreDisplay) scoreDisplay.textContent = this.score.toString();
-        if (movesDisplay) movesDisplay.textContent = this.moves.toString();
+        if (movesDisplay) movesDisplay.textContent = this.movesRemaining.toString();
     }
 }
 
