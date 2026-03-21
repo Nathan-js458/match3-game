@@ -270,7 +270,10 @@ class Match3Game {
                 this.processMatches(newMatches);
             } else {
                 this.isAnimating = false;
-                this.checkGameOver();
+                // Only check game over if a move was actually made (not during initialization)
+                if (this.moves > 0) {
+                    this.checkGameOver();
+                }
                 this.render();
             }
         }, ANIMATION_DELAY);
