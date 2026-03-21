@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 const COLORS = ['red', 'blue', 'green', 'yellow', 'purple', 'pink'];
 const GRID_SIZE = 6;
@@ -17,8 +17,80 @@ interface GameState {
   history: Array<{ grid: string[][]; score: number; moves: number; movesRemaining: number }>;
 }
 
+// Utility functions
+function generateInitialGrid(): string[][] {
+  let grid: string[][] = [];
+  for (let i = 0; i < GRID_SIZE; i++) {
+    grid[i] = [];
+    for (let j = 0; j < GRID_SIZE; j++) {
+      grid[i][j] = COLORS[Math.floor(Math.random() * COLORS.length)];
+    }
+  }
+  // Ensure no initial matches
+  for (let i = 0; i < GRID_SIZE; i++) {
+    for (let j = 0; j < GRID_SIZE; j++) {
+      while (hasMatchAt(grid, i, j)) {
+        grid[i][j] = COLORS[Math.floor(Math.random() * COLORS.length)];
+      }
+    }
+  }
+  return grid;
+}
+
+function hasMatchAt(grid: string[][], row: number, col: number): boolean {
+  const color = grid[row][col];
+  let horizontalMatch = 1;
+  for (let j = col - 1; j >= 0 && grid[row][j] === color; j--) horizontalMatch++;
+  for (let j = col + 1; j < GRID_SIZE && grid[row][j] === color; j++) horizontalMatch++;
+  if (horizontalMatch >= MATCH_SIZE) return true;
+
+  let verticalMatch = 1;
+  for (let i = row - 1; i >= 0 && grid[i][col] === color; i--) verticalMatch++;
+  for (let i = row + 1; i < GRID_SIZE && grid[i][col] === color; i++) verticalMatch++;
+  if (verticalMatch >= MATCH_SIZE) return true;
+
+  return false;
+}
+
+function findMatches(grid: string[][]): Array<{ row: number; col: number }> {
+  const matched = new Set<string>();
+
+  for (let i = 0; i < GRID_SIZE; i++) {
+    for (let j = 0; j < GRID_SIZE - MATCH_SIZE + 1; j++) {
+      const color = grid[i][j];
+      let matchLength = 1;
+      for (let k = j + 1; k < GRID_SIZE && grid[i][k] === color; k++) matchLength++;
+      if (matchLength >= MATCH_SIZE) {
+        for (let k = 0; k < matchLength; k++) matched.add(`${i},${j + k}`);
+      }
+    }
+  }
+
+  for (let j = 0; j < GRID_SIZE; j++) {
+    for (let i = 0; i < GRID_SIZE - MATCH_SIZE + 1; i++) {
+      const color = grid[i][j];
+      let matchLength = 1;
+      for (let k = i + 1; k < GRID_SIZE && grid[k][j] === color; k++) matchLength++;
+      if (matchLength >= MATCH_SIZE) {
+        for (let k = 0; k < matchLength; k++) matched.add(`${i + k},${j}`);
+      }
+    }
+  }
+
+  return Array.from(matched).map((pos) => {
+    const [row, col] = pos.split(',').map(Number);
+    return { row, col };
+  });
+}
+
+function isAdjacent(pos1: { row: number; col: number }, pos2: { row: number; col: number }): boolean {
+  const rowDiff = Math.abs(pos1.row - pos2.row);
+  const colDiff = Math.abs(pos1.col - pos2.col);
+  return (rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1);
+}
+
 export default function App() {
-  const [gameState, setGameState] = useState<GameState>(() => ({
+  const [gameState, setGameState] = useState<GameState>({
     grid: generateInitialGrid(),
     score: 0,
     moves: 0,
@@ -27,78 +99,7 @@ export default function App() {
     isAnimating: false,
     gameOver: false,
     history: [],
-  }));
-
-  function generateInitialGrid(): string[][] {
-    let grid: string[][] = [];
-    for (let i = 0; i < GRID_SIZE; i++) {
-      grid[i] = [];
-      for (let j = 0; j < GRID_SIZE; j++) {
-        grid[i][j] = COLORS[Math.floor(Math.random() * COLORS.length)];
-      }
-    }
-    // Ensure no initial matches
-    for (let i = 0; i < GRID_SIZE; i++) {
-      for (let j = 0; j < GRID_SIZE; j++) {
-        while (hasMatchAt(grid, i, j)) {
-          grid[i][j] = COLORS[Math.floor(Math.random() * COLORS.length)];
-        }
-      }
-    }
-    return grid;
-  }
-
-  function hasMatchAt(grid: string[][], row: number, col: number): boolean {
-    const color = grid[row][col];
-    let horizontalMatch = 1;
-    for (let j = col - 1; j >= 0 && grid[row][j] === color; j--) horizontalMatch++;
-    for (let j = col + 1; j < GRID_SIZE && grid[row][j] === color; j++) horizontalMatch++;
-    if (horizontalMatch >= MATCH_SIZE) return true;
-
-    let verticalMatch = 1;
-    for (let i = row - 1; i >= 0 && grid[i][col] === color; i--) verticalMatch++;
-    for (let i = row + 1; i < GRID_SIZE && grid[i][col] === color; i++) verticalMatch++;
-    if (verticalMatch >= MATCH_SIZE) return true;
-
-    return false;
-  }
-
-  function findMatches(grid: string[][]): Array<{ row: number; col: number }> {
-    const matched = new Set<string>();
-
-    for (let i = 0; i < GRID_SIZE; i++) {
-      for (let j = 0; j < GRID_SIZE - MATCH_SIZE + 1; j++) {
-        const color = grid[i][j];
-        let matchLength = 1;
-        for (let k = j + 1; k < GRID_SIZE && grid[i][k] === color; k++) matchLength++;
-        if (matchLength >= MATCH_SIZE) {
-          for (let k = 0; k < matchLength; k++) matched.add(`${i},${j + k}`);
-        }
-      }
-    }
-
-    for (let j = 0; j < GRID_SIZE; j++) {
-      for (let i = 0; i < GRID_SIZE - MATCH_SIZE + 1; i++) {
-        const color = grid[i][j];
-        let matchLength = 1;
-        for (let k = i + 1; k < GRID_SIZE && grid[k][j] === color; k++) matchLength++;
-        if (matchLength >= MATCH_SIZE) {
-          for (let k = 0; k < matchLength; k++) matched.add(`${i + k},${j}`);
-        }
-      }
-    }
-
-    return Array.from(matched).map((pos) => {
-      const [row, col] = pos.split(',').map(Number);
-      return { row, col };
-    });
-  }
-
-  function isAdjacent(pos1: { row: number; col: number }, pos2: { row: number; col: number }): boolean {
-    const rowDiff = Math.abs(pos1.row - pos2.row);
-    const colDiff = Math.abs(pos1.col - pos2.col);
-    return (rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1);
-  }
+  });
 
   function handleTileClick(row: number, col: number) {
     if (gameState.isAnimating || gameState.gameOver) return;
@@ -148,7 +149,7 @@ export default function App() {
     setTimeout(() => {
       const matches = findMatches(newGrid);
       if (matches.length > 0) {
-        processMatches(newGrid, matches, newState);
+        processMatches(newGrid, matches);
       } else {
         const temp = newGrid[row1][col1];
         newGrid[row1][col1] = newGrid[row2][col2];
@@ -166,7 +167,7 @@ export default function App() {
     }, ANIMATION_DELAY);
   }
 
-  function processMatches(grid: string[][], matches: Array<{ row: number; col: number }>, prevState: any) {
+  function processMatches(grid: string[][], matches: Array<{ row: number; col: number }>) {
     const newGrid = grid.map((r) => [...r]);
     let newScore = gameState.score;
 
@@ -215,18 +216,18 @@ export default function App() {
     setTimeout(() => {
       const newMatches = findMatches(grid);
       if (newMatches.length > 0) {
-        processMatches(grid, newMatches, { ...gameState, score });
+        processMatches(grid, newMatches);
       } else {
         setGameState((prev) => ({
           ...prev,
           isAnimating: false,
         }));
-        checkGameOver(grid, score);
+        checkGameOver(grid);
       }
     }, ANIMATION_DELAY);
   }
 
-  function checkGameOver(grid: string[][], score: number) {
+  function checkGameOver(grid: string[][]) {
     if (gameState.movesRemaining <= 0) {
       setGameState((prev) => ({ ...prev, gameOver: true }));
       return;
@@ -292,6 +293,18 @@ export default function App() {
     }));
   }
 
+  const getColorStyle = (color: string) => {
+    const colorMap: Record<string, string> = {
+      red: '#ff6b35',
+      blue: '#4a90e2',
+      green: '#2ecc71',
+      yellow: '#f1c40f',
+      purple: '#9b59b6',
+      pink: '#e91e63',
+    };
+    return colorMap[color] || '#ccc';
+  };
+
   return (
     <div className="min-h-screen bg-white text-gray-900 flex flex-col items-center justify-center p-5">
       <div className="max-w-2xl w-full">
@@ -316,18 +329,7 @@ export default function App() {
                         : 'hover:scale-105'
                     }`}
                     style={{
-                      backgroundColor:
-                        color === 'red'
-                          ? '#ff6b35'
-                          : color === 'blue'
-                            ? '#4a90e2'
-                            : color === 'green'
-                              ? '#2ecc71'
-                              : color === 'yellow'
-                                ? '#f1c40f'
-                                : color === 'purple'
-                                  ? '#9b59b6'
-                                  : '#e91e63',
+                      backgroundColor: getColorStyle(color),
                       color: color === 'yellow' ? '#1a1a1a' : 'white',
                     }}
                   />
