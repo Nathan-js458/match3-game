@@ -100,9 +100,12 @@ class Match3Game {
 
             if (this.isAdjacent(this.selectedTile, { row, col })) {
                 this.swapTiles(this.selectedTile.row, this.selectedTile.col, row, col);
+                this.selectedTile = null;
+            } else {
+                // If not adjacent, just select the new tile
+                this.selectedTile = { row, col };
+                this.render();
             }
-
-            this.selectedTile = null;
         }
     }
 
