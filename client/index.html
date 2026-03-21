@@ -1,26 +1,341 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Match-3 Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-    <title>Match-3 Game</title>    
-    <!-- THIS IS THE START OF A COMMENT BLOCK, BLOCK TO BE DELETED: Google Fonts here, example:
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    THIS IS THE END OF A COMMENT BLOCK, BLOCK TO BE DELETED -->
-  </head>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #ffffff;
+            color: #1a1a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
 
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-    <script
-      defer
-      src="%VITE_ANALYTICS_ENDPOINT%/umami"
-      data-website-id="%VITE_ANALYTICS_WEBSITE_ID%"></script>
-  </body>
+        .container {
+            max-width: 600px;
+            width: 100%;
+        }
 
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 48px;
+            font-weight: 800;
+            color: #1a1a1a;
+            margin-bottom: 10px;
+            letter-spacing: -1px;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .game-wrapper {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+        }
+
+        .game-board {
+            flex: 1;
+            background: #f5f5f5;
+            border: 3px solid #1a1a1a;
+            padding: 15px;
+            border-radius: 0;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .tile {
+            aspect-ratio: 1;
+            border: 2px solid #1a1a1a;
+            border-radius: 0;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 150ms ease-out;
+            position: relative;
+            user-select: none;
+        }
+
+        .tile:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .tile.selected {
+            box-shadow: 0 0 0 4px #ff6b35;
+            transform: scale(1.1);
+        }
+
+        .tile.red { background: #ff6b35; color: white; }
+        .tile.blue { background: #4a90e2; color: white; }
+        .tile.green { background: #2ecc71; color: white; }
+        .tile.yellow { background: #f1c40f; color: #1a1a1a; }
+        .tile.purple { background: #9b59b6; color: white; }
+        .tile.pink { background: #e91e63; color: white; }
+
+        .tile.matched {
+            animation: explode 300ms ease-out forwards;
+        }
+
+        @keyframes explode {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(0);
+                opacity: 0;
+            }
+        }
+
+        .tile.falling {
+            animation: fall 200ms ease-out;
+        }
+
+        @keyframes fall {
+            from {
+                transform: translateY(-100%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        .stats {
+            background: #f5f5f5;
+            border: 3px solid #1a1a1a;
+            padding: 20px;
+            border-radius: 0;
+            min-width: 150px;
+        }
+
+        .stat-item {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+            flex-direction: column;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            border: 3px solid #1a1a1a;
+            background: #1a1a1a;
+            color: white;
+            cursor: pointer;
+            transition: all 150ms ease-out;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 0;
+        }
+
+        button:hover {
+            background: #ff6b35;
+            border-color: #ff6b35;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.secondary {
+            background: transparent;
+            color: #1a1a1a;
+        }
+
+        button.secondary:hover {
+            background: #f5f5f5;
+        }
+
+        .game-over {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .game-over.active {
+            display: flex;
+            animation: fadeIn 300ms ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .game-over-content {
+            background: white;
+            padding: 40px;
+            border: 3px solid #1a1a1a;
+            text-align: center;
+            max-width: 400px;
+            border-radius: 0;
+        }
+
+        .game-over-content h2 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            color: #1a1a1a;
+        }
+
+        .game-over-content p {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .game-over-content .final-score {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 48px;
+            font-weight: 700;
+            color: #ff6b35;
+            margin-bottom: 30px;
+        }
+
+        .game-over-content button {
+            width: 100%;
+        }
+
+        @media (max-width: 600px) {
+            .game-wrapper {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .stats {
+                display: flex;
+                gap: 20px;
+                justify-content: space-around;
+                min-width: auto;
+            }
+
+            .stat-item {
+                margin-bottom: 0;
+            }
+
+            .header h1 {
+                font-size: 36px;
+            }
+
+            .grid {
+                grid-template-columns: repeat(6, 1fr);
+                gap: 6px;
+            }
+
+            .tile {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>MATCH-3</h1>
+            <p>Clique em peças adjacentes para combinar</p>
+        </div>
+
+        <div class="game-wrapper">
+            <div class="game-board">
+                <div class="grid" id="gameGrid"></div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-label">Pontos</div>
+                    <div class="stat-value" id="scoreDisplay">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Movimentos</div>
+                    <div class="stat-value" id="movesDisplay">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="newGameBtn">Novo Jogo</button>
+            <button class="secondary" id="undoBtn">Desfazer</button>
+        </div>
+    </div>
+
+    <div class="game-over" id="gameOverModal">
+        <div class="game-over-content">
+            <h2>Fim de Jogo!</h2>
+            <p>Nenhum movimento disponível</p>
+            <div class="final-score" id="finalScore">0</div>
+            <button id="restartBtn">Jogar Novamente</button>
+        </div>
+    </div>
+
+    <script src="/src/game.js"></script>
+</body>
 </html>
