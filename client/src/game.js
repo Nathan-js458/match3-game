@@ -26,7 +26,7 @@ class Match3Game {
     initializeGame() {
         this.grid = this.generateGrid();
         this.score = 0;
-        this.moves = 0;
+        this.moves = INITIAL_MOVES;
         this.movesRemaining = INITIAL_MOVES;
         this.history = [];
         this.selectedTile = null;
