@@ -11,7 +11,7 @@ class Match3Game {
     constructor() {
         this.grid = [];
         this.score = 0;
-        this.moves = 0;
+        this.moves = INITIAL_MOVES;
         this.movesRemaining = INITIAL_MOVES;
         this.history = [];
         this.selectedTile = null;
