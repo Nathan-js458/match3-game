@@ -93,7 +93,7 @@ export default function App() {
   const [gameState, setGameState] = useState<GameState>({
     grid: generateInitialGrid(),
     score: 0,
-    moves: 0,
+    moves: INITIAL_MOVES,
     movesRemaining: INITIAL_MOVES,
     selectedTile: null,
     isAnimating: false,
